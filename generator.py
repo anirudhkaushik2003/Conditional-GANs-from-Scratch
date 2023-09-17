@@ -31,7 +31,7 @@ class Generator(nn.Module):
         self.embedding = nn.Embedding(10, 64)
 
         self.embedding_project = nn.Sequential(
-            nn.ConvTranspose2d(64, 100, 1,1,padding='same', bias=False), 
+            nn.ConvTranspose2d(64, 100, 1,1, bias=False), 
             nn.BatchNorm2d(100),
             nn.LeakyReLU(0.2)
         )
