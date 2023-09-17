@@ -31,8 +31,8 @@ class Generator(nn.Module):
         self.embedding = nn.Embedding(10, 64)
 
         self.embedding_project = nn.Sequential(
-            nn.Linear(64, 100),
-            nn.BatchNorm1d(100),
+            nn.ConvTranspose2d(64, 100, 1,1, bias=False), 
+            nn.BatchNorm2d(100),
             nn.LeakyReLU(0.2)
         )
 
@@ -54,8 +54,8 @@ class Generator(nn.Module):
     def forward(self, x, labels):
 
         labels = self.embedding(labels) # 10 -> 64
-        labels = self.embedding_project(labels) # 64 -> 1024
-        labels = labels.reshape(labels.shape[0], 100, 1, 1 ) # 1024 -> 100x1x1
+        labels = labels.reshape(labels.shape[0], 64, 1, 1)
+        labels = self.embedding_project(labels) # 1x1x64 -> 1x1x64
 
         x = torch.cat([x, labels], dim=1) # 1x1x100 + 1x1x100 -> 1x1x200
 

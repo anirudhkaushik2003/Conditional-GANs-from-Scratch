@@ -37,8 +37,8 @@ class Discriminator(nn.Module):
         self.embedding = nn.Embedding(self.n_classes, 64) # 10 -> 64
 
         self.embedding_project = nn.Sequential(
-            nn.Linear(64, 32*32),
-            nn.BatchNorm1d(32*32),
+            nn.ConvTranspose2d(64, 64, 4,1,0),
+            nn.BatchNorm2d(64),
             nn.LeakyReLU(0.2)
         ) # 1x1x64 -> 4x4x64
 
@@ -55,8 +55,9 @@ class Discriminator(nn.Module):
 
         labels = self.embedding(labels) 
         # convert from 64 to 1x1x64
-        labels = self.embedding_project(labels) # 64 -> 1024
-        labels = labels.reshape(labels.shape[0], 1, 32, 32 ) # 1024 -> 1x32x32
+        labels = labels.reshape(labels.shape[0], 64, 1, 1)
+        labels = self.embedding_project(labels)
+        labels = labels.reshape(labels.shape[0], 1, 32, 32 )
 
 
         x = torch.concat((x, labels), dim=1) # 1x32x32 -> 2x32x32

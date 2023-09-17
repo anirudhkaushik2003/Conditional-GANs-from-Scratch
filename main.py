@@ -49,7 +49,7 @@ modelD.apply(weights_init)
 fixed_noise = torch.randn(BATCH_SIZE, 100, 1, 1, device='cuda')
 real = 1.0
 fake = 0.0
-learning_rate = 2e-4
+learning_rate = 2e-5
 optimD = torch.optim.Adam(modelD.parameters(), lr=learning_rate, betas=(0.5, 0.999))
 optimG = torch.optim.Adam(modelG.parameters(), lr=learning_rate, betas=(0.5, 0.999))
 
@@ -57,7 +57,7 @@ num_epochs = 100
 save_freq = 1
 
 # check if checkpoint exists and load it
-if os.path.exists('/ssd_scratch/cvit/anirudhkaushik/checkpoints/cgan_checkpoint_latest.pt'):
+if os.path.exists('/ssd_scratch/cvit/anirudhkaushik/checkpoints/cganG_checkpoint_latest.pt'):
     restart_last_checkpoint(modelG, optimG, type="G")
     restart_last_checkpoint(modelD, optimD, type="D")
 
