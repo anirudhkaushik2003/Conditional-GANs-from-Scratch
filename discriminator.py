@@ -37,9 +37,8 @@ class Discriminator(nn.Module):
         self.embedding = nn.Embedding(self.n_classes, 64) # 10 -> 64
 
         self.embedding_project = nn.Sequential(
-            nn.ConvTranspose2d(64, 64, 4,1,0),
-            nn.BatchNorm2d(64),
-            nn.LeakyReLU(0.2)
+            nn.Linear(64, 32*32),
+            nn.ReLU(True)
         ) # 1x1x64 -> 4x4x64
 
         self.conv1 = Block(img_channels+1, 64) # 32x32x1+1(for labels) -> 16x16x64
@@ -55,8 +54,7 @@ class Discriminator(nn.Module):
 
         labels = self.embedding(labels) 
         # convert from 64 to 1x1x64
-        labels = labels.reshape(labels.shape[0], 64, 1, 1)
-        labels = self.embedding_project(labels)
+        labels = self.embedding_project(labels) # 64 -> 32x32
         labels = labels.reshape(labels.shape[0], 1, 32, 32 )
 
 
