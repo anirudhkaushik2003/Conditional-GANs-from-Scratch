@@ -49,7 +49,7 @@ modelD.apply(weights_init)
 fixed_noise = torch.randn(BATCH_SIZE, 100, 1, 1, device='cuda')
 real = 1.0
 fake = 0.0
-learning_rate = 2e-3
+learning_rate = 2e-4
 optimD = torch.optim.Adam(modelD.parameters(), lr=learning_rate, betas=(0.5, 0.999))
 optimG = torch.optim.Adam(modelG.parameters(), lr=learning_rate, betas=(0.5, 0.999))
 
@@ -79,10 +79,10 @@ for epoch in range(num_epochs):
 
 
         noise = torch.randn(batch[0].shape[0] , 100, 1, 1, device=device) # use gaussian noise instead of uniform
-        fake_images = modelG(noise)
+        fake_images = modelG(noise, y_labels)
         fake_labels = torch.full((batch[0].shape[0] ,), fake, device=device)
 
-        output = modelD(fake_images.detach()).view(-1)
+        output = modelD(fake_images.detach(), y_labels ).view(-1)
         lossD_fake = criterion(output, fake_labels)
 
         lossD_fake.backward()
@@ -94,7 +94,7 @@ for epoch in range(num_epochs):
         # Train only G model
         modelG.zero_grad()
         fake_labels.fill_(real) # use value of 1 so Generator tries to produce real images
-        output = modelD(fake_images).view(-1)
+        output = modelD(fake_images, y_labels).view(-1)
         lossG = criterion(output, fake_labels)
         lossG.backward()
         D_G_z2 = output.mean().item()

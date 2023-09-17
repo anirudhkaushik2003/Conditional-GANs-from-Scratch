@@ -28,10 +28,18 @@ class Generator(nn.Module):
         self.in_ch = self.img_size*8
         self.img_channels = img_ch
 
+        self.embedding = nn.Embedding(10, 64)
+
+        self.embedding_project = nn.Sequential(
+            nn.ConvTranspose2d(64, 100, 1,1,padding='same', bias=False), 
+            nn.BatchNorm2d(100),
+            nn.LeakyReLU(0.2)
+        )
+
 
         
         self.project = nn.Sequential(
-            nn.ConvTranspose2d(100, self.in_ch, 4,1,0, bias=False),
+            nn.ConvTranspose2d(100*2, self.in_ch, 4,1,0, bias=False),
             nn.BatchNorm2d(self.in_ch),
             nn.LeakyReLU(0.2)
         )
@@ -43,7 +51,14 @@ class Generator(nn.Module):
         self.out = nn.Conv2d(self.in_ch//8, self.img_channels, 3, padding='same' ) # test with kernel size 3
         self.out_act = nn.Tanh()
 
-    def forward(self, x):
+    def forward(self, x, labels):
+
+        labels = self.embedding(labels) # 10 -> 64
+        labels = labels.reshape(labels.shape[0], 64, 1, 1)
+        labels = self.embedding_project(labels) # 1x1x64 -> 1x1x64
+
+        x = torch.cat([x, labels], dim=1) # 1x1x100 + 1x1x100 -> 1x1x200
+
         x = self.project(x)
         x = self.conv1(x)
         x = self.conv2(x)
