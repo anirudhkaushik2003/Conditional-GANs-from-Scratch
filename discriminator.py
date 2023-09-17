@@ -29,11 +29,20 @@ class Block(nn.Module):
         return x
 
 class Discriminator(nn.Module):
-    def __init__(self, img_channels=1):
+    def __init__(self, n_classes=10, img_channels=1):
         super(Discriminator, self).__init__()
         self.img_channels = img_channels
+        self.n_classes = n_classes
 
-        self.conv1 = Block(img_channels, 64) # 32x32x1 -> 16x16x64
+        self.embedding = nn.Embedding(self.n_classes, 64) # 10 -> 64
+
+        self.embedding_project = nn.Sequential(
+            nn.ConvTranspose2d(64, 64, 4,1,0),
+            nn.BatchNorm2d(64),
+            nn.LeakyReLU(0.2)
+        ) # 1x1x64 -> 4x4x64
+
+        self.conv1 = Block(img_channels+1, 64) # 32x32x1+1(for labels) -> 16x16x64
         self.conv2 = Block(64, 128) # 16x16x64 -> 8x8x128
         self.conv3 = Block(128, 256) # 8x8x128 -> 4x4x256 
         self.conv4 = Block(256, 512) # 4x4x256 -> 2x2x512
@@ -42,7 +51,16 @@ class Discriminator(nn.Module):
         self.out = nn.Conv2d(512, 1, 2 ) # 2x2x512 -> 1x1x1
         self.out_act = nn.Sigmoid()
 
-    def forward(self, x):
+    def forward(self, x, labels):
+
+        labels = self.embedding(labels) 
+        # convert from 64 to 1x1x64
+        labels = labels.reshape(labels.shape[0], 64, 1, 1)
+        labels = self.embedding_project(labels)
+        labels = labels.reshape(labels.shape[0], 1, 32, 32 )
+
+        x = torch.concat((x, labels), dim=1) # 1x32x32 -> 2x32x32
+
         x = self.conv1(x)
         x = self.conv2(x)
         x = self.conv3(x)

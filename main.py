@@ -57,7 +57,7 @@ num_epochs = 100
 save_freq = 1
 
 # check if checkpoint exists and load it
-if os.path.exists('/ssd_scratch/cvit/anirudhkaushik/checkpoints/gan_checkpoint_latest.pt'):
+if os.path.exists('/ssd_scratch/cvit/anirudhkaushik/checkpoints/cgan_checkpoint_latest.pt'):
     restart_last_checkpoint(modelG, optimG, type="G")
     restart_last_checkpoint(modelD, optimD, type="D")
 
@@ -70,8 +70,9 @@ for epoch in range(num_epochs):
         modelD.zero_grad()
         real_images = batch[0].to(device)
         real_labels = torch.full((batch[0].shape[0] ,), real, device=device)
+        y_labels = batch[1].to(device)
 
-        output = modelD(real_images).view(-1)
+        output = modelD(real_images, y_labels).view(-1)
         lossD_real = criterion(output, real_labels)
         lossD_real.backward()
         D_x = output.mean().item()
