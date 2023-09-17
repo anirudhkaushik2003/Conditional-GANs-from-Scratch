@@ -49,9 +49,11 @@ modelD.apply(weights_init)
 fixed_noise = torch.randn(BATCH_SIZE, 100, 1, 1, device='cuda')
 real = 1.0
 fake = 0.0
-learning_rate = 2e-5
-optimD = torch.optim.Adam(modelD.parameters(), lr=learning_rate, betas=(0.5, 0.999))
-optimG = torch.optim.Adam(modelG.parameters(), lr=learning_rate, betas=(0.5, 0.999))
+learning_rate1 = 1e-3
+learning_rate2 = 2e-4
+
+optimD = torch.optim.Adam(modelD.parameters(), lr=learning_rate1, betas=(0.5, 0.999))
+optimG = torch.optim.Adam(modelG.parameters(), lr=learning_rate2, betas=(0.5, 0.999))
 
 num_epochs = 100
 save_freq = 1
@@ -71,6 +73,7 @@ for epoch in range(num_epochs):
         real_images = batch[0].to(device)
         real_labels = torch.full((batch[0].shape[0] ,), real, device=device)
         y_labels = batch[1].to(device)
+        y_fake_labels = torch.randint(0, 10, (batch[0].shape[0] ,), device=device)
 
         output = modelD(real_images, y_labels).view(-1)
         lossD_real = criterion(output, real_labels)
@@ -81,7 +84,6 @@ for epoch in range(num_epochs):
         noise = torch.randn(batch[0].shape[0] , 100, 1, 1, device=device) # use gaussian noise instead of uniform
         fake_images = modelG(noise, y_labels)
         fake_labels = torch.full((batch[0].shape[0] ,), fake, device=device)
-        y_fake_labels = torch.randint(0, 10, (batch[0].shape[0] ,), device=device)
 
         output = modelD(fake_images.detach(), y_fake_labels ).view(-1)
         lossD_fake = criterion(output, fake_labels)
