@@ -23,7 +23,7 @@ data_transforms = transforms.Compose([
     transforms.Resize((IMG_SIZE, IMG_SIZE)),
     transforms.RandomRotation(15),
     transforms.ToTensor(),
-    transforms.Normalize((0.1307,), (0.3081,))
+    transforms.Normalize((0.5,), (0.5,))
 
 ])
 
@@ -40,6 +40,9 @@ criterion = nn.BCELoss()
 modelG = Generator(IMG_SIZE)
 modelD = Discriminator()
 
+modelG = torch.nn.DataParallel(modelG)
+modelD = torch.nn.DataParallel(modelD)
+
 modelG = modelG.to(device)
 modelD = modelD.to(device)
 
@@ -49,7 +52,7 @@ modelD.apply(weights_init)
 fixed_noise = torch.randn(BATCH_SIZE, 100, 1, 1, device='cuda')
 real = 1.0
 fake = 0.0
-learning_rate1 = 1e-3
+learning_rate1 = 2e-4
 learning_rate2 = 2e-4
 
 optimD = torch.optim.Adam(modelD.parameters(), lr=learning_rate1, betas=(0.5, 0.999))
@@ -73,16 +76,18 @@ for epoch in range(num_epochs):
         real_images = batch[0].to(device)
         real_labels = torch.full((batch[0].shape[0] ,), real, device=device)
         y_labels = batch[1].to(device)
+       
         y_fake_labels = torch.randint(0, 10, (batch[0].shape[0] ,), device=device)
 
+        # real batch
         output = modelD(real_images, y_labels).view(-1)
         lossD_real = criterion(output, real_labels)
         lossD_real.backward()
         D_x = output.mean().item()
 
-
+        # fake batch
         noise = torch.randn(batch[0].shape[0] , 100, 1, 1, device=device) # use gaussian noise instead of uniform
-        fake_images = modelG(noise, y_labels)
+        fake_images = modelG(noise, y_fake_labels)
         fake_labels = torch.full((batch[0].shape[0] ,), fake, device=device)
 
         output = modelD(fake_images.detach(), y_fake_labels ).view(-1)
@@ -104,13 +109,13 @@ for epoch in range(num_epochs):
 
         optimG.step()
 
-        if step%100 == 0:
+        if step%500 == 0:
             # print(f"Epoch: {epoch}, step: {step:03d}, LossD: {lossD.item()}, LossG: {lossG.item()}, D(x): {D_x}, D(G(z)): {D_G_z1:02f }/{D_G_z2:02f}")
             # limit loss to 2 decimal places
             print(f"Epoch: {epoch}, step: {step:03d}, LossD: {lossD.item():.2f}, LossG: {lossG.item():.2f}, D(x): {D_x:.2f}, D(G(z)): {D_G_z1:.2f}/{D_G_z2:.2f}")
     if epoch%save_freq == 0:
-        create_checkpoint(modelG, optimG, epoch, lossG.item(), type="G")
-        create_checkpoint(modelD, optimD, epoch, lossD.item(), type="D")
+        create_checkpoint(modelG, optimG, epoch, lossG.item(), type="G", multiGPU=True)
+        create_checkpoint(modelD, optimD, epoch, lossD.item(), type="D", multiGPU=True)
 
 
 

@@ -34,11 +34,10 @@ class Discriminator(nn.Module):
         self.img_channels = img_channels
         self.n_classes = n_classes
 
-        self.embedding = nn.Embedding(self.n_classes, 64) # 10 -> 64
+        self.embedding = nn.Embedding(self.n_classes, self.n_classes) # 10 -> 64
 
         self.embedding_project = nn.Sequential(
-            nn.Linear(64, 32*32),
-            nn.ReLU(True)
+            nn.Linear(self.n_classes, 32*32),
         ) # 1x1x64 -> 4x4x64
 
         self.conv1 = Block(img_channels+1, 64) # 32x32x1+1(for labels) -> 16x16x64

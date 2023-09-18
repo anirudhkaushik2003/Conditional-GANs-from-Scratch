@@ -20,19 +20,19 @@ class Block(nn.Module):
         return x
 
 class Generator(nn.Module):
-    def __init__(self,IMG_SIZE, img_ch=1):
+    def __init__(self,IMG_SIZE, img_ch=1, n_classes=10):
         super(Generator, self).__init__()
 
         # project and reshape the input
         self.img_size = IMG_SIZE
         self.in_ch = self.img_size*8
         self.img_channels = img_ch
+        self.n_classes = n_classes
 
-        self.embedding = nn.Embedding(10, 64)
+        self.embedding = nn.Embedding(self.n_classes, 64)
 
         self.embedding_project = nn.Sequential(
             nn.Linear(64, 100),
-            nn.ReLU(True)
         )
 
 
